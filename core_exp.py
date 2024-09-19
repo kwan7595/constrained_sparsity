@@ -7,6 +7,8 @@ import torch
 import torch.nn as nn
 import yaml
 from torch.optim import lr_scheduler
+import habana_frameworks.torch.core as htcore
+import habana_frameworks.torch.gpu_migration
 
 import wandb
 from utils import (
