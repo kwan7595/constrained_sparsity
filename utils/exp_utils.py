@@ -196,6 +196,8 @@ def validation_loop(
     elif hthpu.is_available():
         device = torch.device('hpu')
         val_model = val_model.to(device)
+        val_model = torch.compile(val_model,backend='hpu_backend')
+        val_model_module = val_model
     # Only get MACS (~0.5 FLOPS) and params for purged models.
     # Ptflops library does not support L0XXX modules
     log_dict.update(get_macs_and_params(val_model_module))
@@ -217,7 +219,7 @@ def validation_loop(
                 device = torch.device('hpu')
                 target_ = target_.to(device)
                 input_ = input_.to(device)
-                
+
             output_ = model.forward(input_)
             if hasattr(model_module, "regularization"):
                 loss, _ = cmp.loss_func(model, output_, target_)
