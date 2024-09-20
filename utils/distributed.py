@@ -77,7 +77,9 @@ def distributed_wrapper(model, dist_dict):
         )
         model_module = model.module
     elif torch.cuda.is_available():
-        model = model.cuda()
+        device = torch.device("hpu")
+        model = model.to(device)
+        #model = model.cuda()
         model_module = model
 
     return model, model_module

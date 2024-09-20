@@ -56,6 +56,7 @@ def train(
 
     # switch to train mode
     model.train()
+    model = torch.compile(model,backend='hpu_backend')
 
     for batch_id, (input_, target_) in enumerate(train_loader):
 
