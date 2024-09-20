@@ -193,7 +193,9 @@ def validation_loop(
             # metrics across ranks. See https://github.com/pytorch/vision/blob/d6e39ff76c82c7510f68a7aa637f015e7a86f217/references/classification/train.py#L61
             val_model = nn.DataParallel(val_model)
             val_model_module = val_model.module
-
+    elif hthpu.is_available():
+        device = torch.device('hpu')
+        val_model = val_model.to(device)
     # Only get MACS (~0.5 FLOPS) and params for purged models.
     # Ptflops library does not support L0XXX modules
     log_dict.update(get_macs_and_params(val_model_module))
@@ -211,7 +213,11 @@ def validation_loop(
             if torch.cuda.is_available():
                 target_ = target_.cuda()
                 input_ = input_.cuda()
-
+            elif hthpu.is_available():
+                device = torch.device('hpu')
+                target_ = target_.to(device)
+                input_ = input_.to(device)
+                
             output_ = model.forward(input_)
             if hasattr(model_module, "regularization"):
                 loss, _ = cmp.loss_func(model, output_, target_)
