@@ -13,6 +13,7 @@ import torchvision.models as tv_models
 from ptflops import get_model_complexity_info
 
 import sparse
+import habana_frameworks.torch.hpu as hthpu
 
 from .basic_utils import AverageMeter, compute_accuracy
 from .cmp_utils import BaselineProblem, ConstrainedL0Problem, PenalizedL0Problem
@@ -56,10 +57,11 @@ def train(
 
     # switch to train mode
     model.train()
-    model = torch.compile(model,backend='hpu_backend')
-
+    ## hpu support
+    if hthpu.is_available():
+        model = torch.compile(model,backend='hpu_backend')
     for batch_id, (input_, target_) in enumerate(train_loader):
-
+        
         step_id += 1
 
         # Force stop training after required number of batches
@@ -72,6 +74,10 @@ def train(
         if torch.cuda.is_available():
             target_ = target_.cuda()
             input_ = input_.cuda()
+        elif hthpu.is_available():
+            device = torch.device('hpu')
+            target_ = target_.to(device)
+            input_ = input_.to(device)
 
         constrained_optimizer.zero_grad()
 
