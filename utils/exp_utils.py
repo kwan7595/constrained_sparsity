@@ -14,6 +14,7 @@ from ptflops import get_model_complexity_info
 
 import sparse
 import habana_frameworks.torch.hpu as hthpu
+import habana_frameworks.torch.core as htcore
 
 from .basic_utils import AverageMeter, compute_accuracy
 from .cmp_utils import BaselineProblem, ConstrainedL0Problem, PenalizedL0Problem
@@ -58,8 +59,8 @@ def train(
     # switch to train mode
     model.train()
     ## hpu support
-    if hthpu.is_available():
-        model = torch.compile(model,backend='hpu_backend')
+    #if hthpu.is_available(): # eager
+        #model = torch.compile(model,backend='hpu_backend')
     for batch_id, (input_, target_) in enumerate(train_loader):
         
         step_id += 1
@@ -90,11 +91,12 @@ def train(
             reg_config,
         )
         formulation.custom_backward(lagrangian)
+        htcore.mark_step()
         if hasattr(constrained_optimizer.primal_optimizer, "extrapolation"):
             constrained_optimizer.step(cmp.closure, model, input_, target_, reg_config)
         else:
             constrained_optimizer.step()
-
+        htcore.mark_step()
         if isinstance(model, sparse.BaseL0Model):
             # Clamp parameters for training stability
             [layer.clamp_parameters() for layer in model_module.layers_dict["l0"]]
@@ -196,7 +198,7 @@ def validation_loop(
     elif hthpu.is_available():
         device = torch.device('hpu')
         val_model = val_model.to(device)
-        val_model = torch.compile(val_model,backend='hpu_backend')
+        #val_model = torch.compile(val_model,backend='hpu_backend')
         val_model_module = val_model
     # Only get MACS (~0.5 FLOPS) and params for purged models.
     # Ptflops library does not support L0XXX modules
@@ -225,7 +227,7 @@ def validation_loop(
                 loss, _ = cmp.loss_func(model, output_, target_)
             else:
                 loss = cmp.loss_func(model, output_, target_)
-
+            htcore.mark_step()
             loss_meter.update(loss.item(), input_.size(0))
             prec1 = compute_accuracy(output_.data, target_, topk=(1,))[0]
             top1_meter.update(100 - prec1.item(), input_.size(0))
