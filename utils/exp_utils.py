@@ -170,7 +170,7 @@ def validation_loop(
 
     if do_purge_model and isinstance(model_module, sparse.BaseL0Model):
         #sparify model
-        #val_model = purge_model(model_module)
+        val_model = purge_model(model_module)
 
         # Log density (% purged parameters / original parameters) for sparsifiable layers
         layer_density_stats = {}
