@@ -1,0 +1,6 @@
+name: constrained_sparsity
+channels:
+  - defaults
+dependencies:
+  - pip
+prefix: /home/kwanheelee/.conda/envs/constrained_sparsity
