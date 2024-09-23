@@ -168,15 +168,14 @@ def validation_loop(
         log_dict["l0_full"] = reg_stats.l0_full
         log_dict["l2_model"] = reg_stats.l2_model
 
-    if do_purge_model and isinstance(model_module, sparse.BaseL0Model):
-        #sparify model
-        val_model = purge_model(model_module)
-
-        # Log density (% purged parameters / original parameters) for sparsifiable layers
-        layer_density_stats = {}
-        for layer_path, layer_density in val_model.layer_densities.items():
-            layer_density_stats[layer_path + "_dsty"] = layer_density
-        log_dict.update(layer_density_stats)
+    # if do_purge_model and isinstance(model_module, sparse.BaseL0Model):
+    #     #sparify model
+    #     val_model = purge_model(model_module)
+    #     # Log density (% purged parameters / original parameters) for sparsifiable layers
+    #     layer_density_stats = {}
+    #     for layer_path, layer_density in val_model.layer_densities.items():
+    #         layer_density_stats[layer_path + "_dsty"] = layer_density
+    #     log_dict.update(layer_density_stats)
 
     else:
         # Baseline runs and magnitude pruning runs do not allow for purging
