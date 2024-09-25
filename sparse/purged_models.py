@@ -161,15 +161,16 @@ def create_purged_conv(layer_info: PrunedLayerInfo) -> nn.Conv2d:
 
     use_bias = not (bias is None)
     out_channels, in_channels, kh, kw = weight.shape
-
+    
     conv_layer = nn.Conv2d(
         in_channels, out_channels, (kh, kw), bias=use_bias, **conv_kwargs
     )
-
+    weight.to('cpu')
     conv_layer.weight.data = weight
     if use_bias:
+        bias.to('cpu')
         conv_layer.bias.data = bias
-
+    conv_layer.to('hpu')
     return conv_layer
 
 
@@ -184,11 +185,12 @@ def create_purged_linear(layer_info: PrunedLayerInfo) -> nn.Linear:
     linear_layer = nn.Linear(
         in_features=in_feats, out_features=out_feats, bias=use_bias
     )
-
+    weight.to('cpu')
     linear_layer.weight.data = weight
     if use_bias:
         linear_layer.bias.data = bias
-
+        bias.to('cpu')
+    linear_layer.to('hpu')
     return linear_layer
 
 
@@ -206,7 +208,7 @@ def create_purged_batch_norm(layer, mask=None):
         new_batch_norm.running_mean = layer.running_mean[mask]
         new_batch_norm.running_var = layer.running_var[mask]
         new_batch_norm.num_batches_tracked = layer.num_batches_tracked
-
+    
     return new_batch_norm
 
 
